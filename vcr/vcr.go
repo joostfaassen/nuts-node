@@ -276,7 +276,7 @@ func (c *vcr) initJSONLDIndices() error {
 }
 
 func (c *vcr) Name() string {
-	return moduleName
+	return ModuleName
 }
 
 func (c *vcr) Config() interface{} {

@@ -138,9 +138,20 @@ func startServer(ctx context.Context, system *core.System) error {
 			return err
 		}
 	}
+
+	// Register routes
 	for _, r := range system.Routers {
 		r.Routes(echoServer)
 	}
+
+	// Register specifications of APIs that have them
+	var specdAPIs []core.RoutableWithSpec
+	for _, r := range system.Routers {
+		if specifiedAPI, ok := r.(core.RoutableWithSpec); ok {
+			specdAPIs = append(specdAPIs, specifiedAPI)
+		}
+	}
+	core.NewOpenAPISpecRepository(specdAPIs).Routes(echoServer)
 
 	serverCtx, cancel := context.WithCancel(ctx)
 
