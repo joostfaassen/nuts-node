@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -206,8 +207,9 @@ func Logger() *logrus.Entry {
 // Currently, this only allows for configuration of skip paths
 type loggerConfig struct {
 	// Skipper defines a function to skip middleware.
-	Skipper middleware.Skipper
-	logger  *logrus.Entry
+	Skipper            middleware.Skipper
+	logger             *logrus.Entry
+	logRequestAndReply bool
 }
 
 // loggerMiddleware Is a custom logger middleware.
@@ -217,8 +219,22 @@ type loggerConfig struct {
 func loggerMiddleware(config loggerConfig) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (err error) {
+			var requestBody []byte
+			var responseBody []byte
+
 			if config.Skipper != nil && config.Skipper(c) {
 				return next(c)
+			}
+			if config.logRequestAndReply && c.Request().GetBody != nil {
+				bodyReader, err := c.Request().GetBody()
+				if err != nil {
+					return err
+				}
+				requestBody, err = io.ReadAll(bodyReader)
+				if err != nil {
+					return err
+				}
+				c.Request().Body = bodyReader
 			}
 			err = next(c)
 			req := c.Request()
@@ -242,6 +258,9 @@ func loggerMiddleware(config loggerConfig) echo.MiddlewareFunc {
 				"uri":       req.RequestURI,
 				"status":    status,
 			}).Info("request")
+			if config.logRequestAndReply {
+				res.Hijack()
+			}
 			return
 		}
 	}

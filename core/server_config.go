@@ -50,6 +50,18 @@ const loggerLevelFlag = "verbosity"
 const defaultLoggerFormat = "text"
 const loggerFormatFlag = "loggerformat"
 
+// HTTPLogLevel specifies what to log for incoming/outgoing HTTP traffic.
+type HTTPLogLevel string
+
+const (
+	// HTTPLogNothingLevel indicates nothing will be logged for incoming/outgoing HTTP traffic.
+	HTTPLogNothingLevel HTTPLogLevel = ""
+	// HTTPLogMetadataLevel indicates that only metadata (HTTP URI, method, response code, etc) will be logged for incoming/outgoing HTTP traffic.
+	HTTPLogMetadataLevel = "metadata"
+	// HTTPLogRequestReplyLevel indicates that metadata and full request/reply bodies  will be logged for incoming/outgoing HTTP traffic.
+	HTTPLogRequestReplyLevel = "request-reply"
+)
+
 // ServerConfig has global server settings.
 type ServerConfig struct {
 	Verbosity    string           `koanf:"verbosity"`
@@ -76,6 +88,8 @@ type HTTPConfig struct {
 	Address string `koanf:"address"`
 	// CORS holds the configuration for Cross Origin Resource Sharing.
 	CORS HTTPCORSConfig `koanf:"cors"`
+	// Log indicates whether to log the HTTP request and responses.
+	Log HTTPLogLevel `koanf:"log"`
 }
 
 // HTTPCORSConfig contains configuration for Cross Origin Resource Sharing.
@@ -100,6 +114,7 @@ func NewServerConfig() *ServerConfig {
 		HTTP: GlobalHTTPConfig{
 			HTTPConfig: HTTPConfig{
 				Address: defaultHTTPInterface,
+				Log:     HTTPLogMetadataLevel,
 			},
 			AltBinds: map[string]HTTPConfig{},
 		},
