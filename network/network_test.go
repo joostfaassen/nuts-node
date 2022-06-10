@@ -354,7 +354,7 @@ func TestNetwork_Configure(t *testing.T) {
 		ctx := createNetwork(t, ctrl)
 		ctx.protocol.EXPECT().Configure(gomock.Any()).AnyTimes()
 		prov := storage.NewMockProvider(ctrl)
-		prov.EXPECT().GetKVStore(gomock.Any()).Return(nil, errors.New("failed"))
+		prov.EXPECT().GetKVStore(gomock.Any(), gomock.Any()).Return(nil, errors.New("failed"))
 		ctx.network.storeProvider = prov
 		ctx.network.connectionManager = nil
 
